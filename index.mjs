@@ -63,10 +63,10 @@ async function fetchDocument(url, source, config, signal) {
   try {
     parsed = new URL(url)
   } catch (error) {
-    throw new Error(`${source}: URL is invalid: ${url}`, { cause: error })
+    throw new Error(`${source} 地址格式不正确：${url}`, { cause: error })
   }
   if (parsed.protocol !== 'https:' && !(parsed.protocol === 'http:' && config.allowInsecureHttp)) {
-    throw new Error(`${source}: URL must use HTTPS, or enable Allow HTTP: ${url}`)
+    throw new Error(`${source} 地址必须使用 HTTPS；可信内网才可以开启“允许 HTTP”：${url}`)
   }
   const requestSignal = AbortSignal.any([signal, AbortSignal.timeout(config.timeoutMs)])
   let response
@@ -74,28 +74,28 @@ async function fetchDocument(url, source, config, signal) {
     response = await fetch(parsed, { headers: { accept: 'text/yaml, text/plain, application/yaml, */*', 'cache-control': 'no-cache' }, signal: requestSignal })
   } catch (error) {
     if (requestSignal.aborted && !signal.aborted) {
-      throw new Error(`${source}: request timed out after ${config.timeoutMs} ms: ${url}`, { cause: error })
+      throw new Error(`${source} 请求超时（${config.timeoutMs} 毫秒）：${url}`, { cause: error })
     }
-    throw new Error(`${source}: request failed: ${error instanceof Error ? error.message : String(error)}: ${url}`, { cause: error })
+    throw new Error(`${source} 请求失败：${error instanceof Error ? error.message : String(error)}：${url}`, { cause: error })
   }
-  if (!response.ok) throw new Error(`${source}: request failed with HTTP ${response.status} ${response.statusText}: ${url}`)
+  if (!response.ok) throw new Error(`${source} 请求失败：服务器返回 HTTP ${response.status} ${response.statusText}：${url}`)
   const declaredLength = response.headers.get('content-length')
   if (declaredLength !== null && Number(declaredLength) > MAX_BYTES) {
-    throw new Error(`${source}: response is larger than ${MAX_BYTES} bytes: ${url}`)
+    throw new Error(`${source} 文件超过 4 MB 限制：${url}`)
   }
   const text = await response.text()
   if (new TextEncoder().encode(text).byteLength > MAX_BYTES) {
-    throw new Error(`${source}: response is larger than ${MAX_BYTES} bytes: ${url}`)
+    throw new Error(`${source} 文件超过 4 MB 限制：${url}`)
   }
   if (/^\s*<!doctype html|^\s*<html[\s>]/iu.test(text)) {
-    throw new Error(`${source}: response looks like an HTML page instead of YAML: ${url}`)
+    throw new Error(`${source} 返回的是网页 HTML，不是 YAML 文件：${url}`)
   }
   return { text, contentType: response.headers.get('content-type') ?? 'unknown', finalUrl: response.url || parsed.href }
 }
 
 async function download(config, signal) {
   if (config.settingsUrl.trim() === '' || config.credentialsUrl.trim() === '') {
-    throw new Error('remote configuration sync needs both settingsUrl and credentialsUrl')
+    throw new Error('请先填写 settings.yaml 和 .credentials.yaml 两个地址')
   }
   const [settingsDocument, credentialsDocument] = await Promise.all([
     fetchDocument(config.settingsUrl, 'settings.yaml', config, signal),
@@ -135,14 +135,18 @@ function configured(config) {
 function reportText(report) {
   const skipped = report.skippedSettings.length === 0
     ? ''
-    : `; skipped unmounted settings: ${report.skippedSettings.join(', ')}`
-  return `Remote DSH configuration synchronized: ${report.settings.length} settings namespace(s), ${report.credentials.length} credential reference(s)${skipped}.`
+    : `；未应用未挂载的设置：${report.skippedSettings.join('、')}`
+  return `远端 DSH 配置同步完成：已更新 ${report.settings.length} 个设置区块、${report.credentials.length} 个凭据引用${skipped}。`
+}
+
+function contentTypeText(contentType) {
+  return contentType === 'application/octet-stream' ? '通用文件流（正常）' : contentType
 }
 
 function checkText(documents) {
   const settings = Object.keys(documents.settings)
   const credentials = Object.keys(documents.credentials)
-  return `Remote DSH configuration check passed: settings.yaml (${settings.length} namespace(s), ${documents.sources.settings.contentType}), .credentials.yaml (${credentials.length} reference(s), ${documents.sources.credentials.contentType}).`
+  return `检测通过：settings.yaml 已读取 ${settings.length} 个设置区块；.credentials.yaml 已读取 ${credentials.length} 个凭据引用。文件类型：${contentTypeText(documents.sources.settings.contentType)}、${contentTypeText(documents.sources.credentials.contentType)}。`
 }
 
 const CHECK_ROUTE = '/dsh-settings-remote-sync/check'
@@ -193,7 +197,7 @@ export function apply(ctx, config) {
     name: 'dsh-sync-check',
     description: 'validate remote DSH settings and credentials without applying them',
     handler: async (invocation) => {
-      if (invocation.rawInput.trim() !== '') return { kind: 'error', text: 'Usage: /dsh-sync-check' }
+      if (invocation.rawInput.trim() !== '') return { kind: 'error', text: '用法：/dsh-sync-check' }
       try {
         return { kind: 'success', text: checkText(await download(activeConfig, invocation.signal)) }
       } catch (error) {
@@ -228,7 +232,7 @@ export function apply(ctx, config) {
     name: 'dsh-sync',
     description: 'synchronize remote DSH settings and credentials',
     handler: async (invocation) => {
-      if (invocation.rawInput.trim() !== '') return { kind: 'error', text: 'Usage: /dsh-sync' }
+      if (invocation.rawInput.trim() !== '') return { kind: 'error', text: '用法：/dsh-sync' }
       try {
         return { kind: 'success', text: reportText(await synchronize(invocation.signal)) }
       } catch (error) {
