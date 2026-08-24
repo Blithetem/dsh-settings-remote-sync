@@ -8,12 +8,16 @@ window.__ModuleLoader__.load({
     var NS = 'settings-remote-sync'
 
     var css = [
-      '.dshrs_card{list-style:none;border:1px solid var(--dsw-alias-border-l2);border-radius:12px;background:var(--dsw-alias-bg-layer-3);overflow:hidden}',
+      '.dshrs_card{list-style:none;border:1px solid var(--dsw-alias-border-l2);border-radius:12px;background:var(--dsw-alias-bg-layer-3);overflow:hidden;transition:border-color .16s,background .16s}',
+      '.dshrs_card:hover{border-color:var(--dsw-alias-label-dimmed)}',
+      '.dshrs_cardOpen{background:var(--dsw-alias-bg-layer-2);border-color:var(--dsw-alias-label-dimmed)}',
       '.dshrs_header{width:100%;border:0;background:none;color:inherit;text-align:left;cursor:pointer;display:flex;align-items:center;gap:12px;padding:14px 16px;font:inherit}',
       '.dshrs_header:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}',
       '.dshrs_headText{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}',
       '.dshrs_title{font-size:15px;font-weight:600;line-height:1.4;color:var(--dsw-alias-label-primary)}',
       '.dshrs_desc,.dshrs_hint{font-size:12px;line-height:1.5;color:var(--dsw-alias-label-tertiary)}',
+      '.dshrs_chevron{width:8px;height:8px;flex:none;border-right:1.5px solid var(--dsw-alias-label-tertiary);border-bottom:1.5px solid var(--dsw-alias-label-tertiary);transform:rotate(45deg) translateY(-2px);transition:transform .16s}',
+      '.dshrs_chevronOpen{transform:rotate(225deg) translate(-1px,-1px)}',
       '.dshrs_body{border-top:1px solid var(--dsw-alias-border-l2);margin:0 16px;padding:4px 0 12px}',
       '.dshrs_field{display:flex;flex-direction:column;gap:5px;padding:11px 0}',
       '.dshrs_field+ .dshrs_field{border-top:1px solid var(--dsw-alias-border-l2)}',
@@ -175,14 +179,15 @@ window.__ModuleLoader__.load({
             onClick: () => props.resetField(key),
           }, '恢复默认'))
       }
-      return React.createElement('li', { className: 'dshrs_card' },
+      return React.createElement('li', { className: 'dshrs_card' + (open ? ' dshrs_cardOpen' : '') },
         React.createElement('button', {
           className: 'dshrs_header', type: 'button', 'aria-expanded': open,
+          'aria-label': (open ? '收起' : '展开') + '：远端 DSH 配置',
           onClick: () => setOpen(!open),
         }, React.createElement('span', { className: 'dshrs_headText' },
           React.createElement('span', { className: 'dshrs_title' }, '远端 DSH 配置'),
           React.createElement('span', { className: 'dshrs_desc' }, '同步 settings.yaml 和 .credentials.yaml')),
-        open ? '⌃' : '⌄'),
+        React.createElement('span', { className: 'dshrs_chevron' + (open ? ' dshrs_chevronOpen' : ''), 'aria-hidden': 'true' })),
         open && React.createElement('div', { className: 'dshrs_body' },
           input('settingsUrl', 'Settings 地址', '远端 settings.yaml 地址，优先使用 HTTPS。'),
           input('credentialsUrl', 'Credentials 地址', '远端 .credentials.yaml 地址，优先使用 HTTPS。'),
