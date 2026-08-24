@@ -2,15 +2,15 @@
 
 Standalone DeepSeek Harness plugin. It downloads the shared `settings.yaml` and `.credentials.yaml`, applies them through DSH's settings and credential services, and adds a Web configuration card.
 
-## Install from this computer
+## Install
 
 Run in PowerShell:
 
 ```powershell
-dsh plugin --profile web add D:\GitLab\dsh-settings-remote-sync
+dsh plugin --profile web add github:Blithetem/dsh-settings-remote-sync
 ```
 
-Then restart the Web profile. The plugin is mounted from this directory; the official DSH repository does not need to be changed.
+Then restart the Web profile. The official DSH repository does not need to be changed.
 
 Open **Settings → Plugins → 远端 DSH 配置** to enter:
 

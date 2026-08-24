@@ -2,15 +2,15 @@
 
 独立的 DeepSeek Harness 插件。它会拉取共享的 `settings.yaml` 和 `.credentials.yaml`，通过 DSH 的 settings 与 credentials 服务应用，并在 Web 设置页提供配置卡片。
 
-## 在本机安装
+## 安装
 
 在 PowerShell 执行：
 
 ```powershell
-dsh plugin --profile web add D:\GitLab\dsh-settings-remote-sync
+dsh plugin --profile web add github:Blithetem/dsh-settings-remote-sync
 ```
 
-然后重启 Web profile。插件直接从这个目录挂载，不需要修改官方 DSH 仓库。
+然后重启 Web profile，不需要修改官方 DSH 仓库。
 
 打开 **设置 → 插件 → 远端 DSH 配置**，填写：
 
