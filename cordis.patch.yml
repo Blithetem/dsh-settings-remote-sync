@@ -1,0 +1,5 @@
+# Mount the Host half. The package manifest supplies the Web half through
+# dsh.client, so one local-path install provides both runtime and settings UI.
+- insert:
+    - id: dsh-settings-remote-sync
+      name: 'dsh-settings-remote-sync'
