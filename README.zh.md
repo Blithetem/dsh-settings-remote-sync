@@ -18,11 +18,14 @@ dsh plugin --profile web add github:Blithetem/dsh-settings-remote-sync
 - `.credentials.yaml` 地址
 - 启动时同步
 - 轮询间隔
+- 请求超时
 - HTTP 开关
 
 保存后只会持久化本地设置覆盖值，并更新正在运行的同步器；仍然可以用 `/dsh-sync` 立即手动同步。
 
 插件不会内置任何远端地址，安装后需要手动填写两个地址。由于凭据文件包含密钥，优先使用 HTTPS；只有在可信内网中才建议开启 HTTP。
+
+可在对话中执行 `/dsh-sync-check` 检测两个地址、HTTP 状态、响应类型和 YAML 内容；该命令只检测，不会写入本地设置或凭据。执行 `/dsh-sync` 才会实际应用配置。错误信息会标明具体文件和失败阶段。
 
 ## 插件结构
 

@@ -18,11 +18,14 @@ Open **Settings → Plugins → 远端 DSH 配置** to enter:
 - `.credentials.yaml` URL
 - startup synchronization
 - polling interval
+- request timeout
 - HTTP opt-in
 
 Saving the card persists only the local settings override and updates the running synchronizer. `/dsh-sync` remains available for an immediate manual pull.
 
 No remote endpoint is bundled. Configure both endpoints after installation. Because the credentials file contains secrets, prefer HTTPS; enable the HTTP option only for a trusted internal network.
+
+Run `/dsh-sync-check` to validate both URLs, HTTP status, response type, and YAML without applying anything. Run `/dsh-sync` to apply the configuration. Errors identify the affected document and failure stage.
 
 ## Plugin layout
 
