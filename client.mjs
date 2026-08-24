@@ -26,6 +26,7 @@ window.__ModuleLoader__.load({
       '.dshrs_btnPrimary{border-color:transparent;background:var(--dsw-alias-label-primary);color:var(--dsw-alias-bg-layer-3)}',
       '.dshrs_btn:disabled{opacity:.4;cursor:default}',
       '.dshrs_error{margin:10px 0 0;color:var(--dsw-alias-state-error-primary);font-size:12px;line-height:1.5}',
+      '.dshrs_success{margin:10px 0 0;color:var(--dsw-alias-state-success-primary);font-size:12px;line-height:1.5}',
     ].join('')
     if (typeof document !== 'undefined' && document.querySelector('style[data-dsh-settings-remote-sync]') === null) {
       var style = document.createElement('style')
@@ -63,6 +64,8 @@ window.__ModuleLoader__.load({
       var listeners = new Set()
       var saving = false
       var failed = false
+      var checking = false
+      var diagnosis
       var snapshot
 
       function readField(key) {
@@ -86,7 +89,9 @@ window.__ModuleLoader__.load({
           dirty: staged.size > 0,
           invalid: [...staged].some(([key, edit]) => !edit.clear && parseValue(key, edit.text) === undefined),
           saving: saving,
+          checking: checking,
           failed: failed,
+          diagnosis: diagnosis,
           settingsUrl: readField('settingsUrl'),
           credentialsUrl: readField('credentialsUrl'),
           syncOnStartup: readField('syncOnStartup'),
@@ -117,6 +122,20 @@ window.__ModuleLoader__.load({
         saving = false; failed = !landed; publish()
       }
       function discard() { staged.clear(); failed = false; publish() }
+      async function check() {
+        if (checking) return
+        if (staged.size > 0) { diagnosis = { ok: false, text: '请先保存当前修改，再执行检测。' }; publish(); return }
+        checking = true; diagnosis = undefined; publish()
+        try {
+          var response = await fetch('/dsh-settings-remote-sync/check', { headers: { accept: 'application/json' }, cache: 'no-store' })
+          var result = await response.json()
+          diagnosis = { ok: response.ok && result.ok === true, text: result.ok ? result.message : result.error }
+        } catch (error) {
+          diagnosis = { ok: false, text: '诊断请求失败：' + (error && error.message ? error.message : String(error)) }
+        } finally {
+          checking = false; publish()
+        }
+      }
       scope.subscribe(publish)
       publish()
       return {
@@ -124,6 +143,7 @@ window.__ModuleLoader__.load({
         edit: edit,
         resetField: resetField,
         save: () => { void save() },
+        check: () => { void check() },
         discard: discard,
       }
     }
@@ -172,8 +192,10 @@ window.__ModuleLoader__.load({
           input('allowInsecureHttp', '允许 HTTP', '仅可信内网开启；凭据会无 TLS 传输。'),
           state.writable === false && React.createElement('p', { className: 'dshrs_hint' }, '当前设置文件为只读。'),
           state.failed && React.createElement('p', { className: 'dshrs_error' }, '保存失败，请检查地址和设置文件权限。'),
+          state.diagnosis && React.createElement('p', { className: state.diagnosis.ok ? 'dshrs_success' : 'dshrs_error' }, state.diagnosis.text),
           React.createElement('div', { className: 'dshrs_footer' },
             React.createElement('button', { className: 'dshrs_btn', type: 'button', disabled: !state.dirty || state.saving, onClick: props.discard }, '放弃修改'),
+            React.createElement('button', { className: 'dshrs_btn', type: 'button', disabled: disabled || state.dirty || state.saving || state.checking, onClick: props.check }, state.checking ? '检测中…' : '检测'),
             React.createElement('button', { className: 'dshrs_btn dshrs_btnPrimary', type: 'button', disabled: !state.dirty || state.invalid || state.saving || disabled, onClick: props.save }, state.saving ? '保存中…' : '保存')))
       )
     }
@@ -185,7 +207,7 @@ window.__ModuleLoader__.load({
           name: 'settings.plugin.item',
           key: NS,
           order: 30,
-          inject: function () { return { hooks: { remoteSyncCard: controller.store }, edit: controller.edit, resetField: controller.resetField, save: controller.save, discard: controller.discard } },
+          inject: function () { return { hooks: { remoteSyncCard: controller.store }, edit: controller.edit, resetField: controller.resetField, save: controller.save, discard: controller.discard, check: controller.check } },
         }, RemoteSyncCard)
       })
     }

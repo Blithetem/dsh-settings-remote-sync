@@ -145,8 +145,10 @@ function checkText(documents) {
   return `Remote DSH configuration check passed: settings.yaml (${settings.length} namespace(s), ${documents.sources.settings.contentType}), .credentials.yaml (${credentials.length} reference(s), ${documents.sources.credentials.contentType}).`
 }
 
+const CHECK_ROUTE = '/dsh-settings-remote-sync/check'
+
 export const name = 'dsh-settings-remote-sync'
-export const inject = ['settings', 'credentials', 'commands']
+export const inject = ['settings', 'credentials', 'commands', 'webServer']
 
 export function apply(ctx, config) {
   const lifecycle = new AbortController()
@@ -199,6 +201,28 @@ export function apply(ctx, config) {
       }
     },
   })
+
+  ctx.effect(() => ctx.webServer.register({
+    kind: 'exact',
+    path: CHECK_ROUTE,
+    handler: async (request, response) => {
+      if (request.method !== 'GET' && request.method !== 'HEAD') {
+        response.writeHead(405, { allow: 'GET, HEAD' })
+        response.end()
+        return
+      }
+      const requestAbort = new AbortController()
+      request.once('close', () => requestAbort.abort())
+      try {
+        const documents = await download(activeConfig, requestAbort.signal)
+        response.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' })
+        response.end(JSON.stringify({ ok: true, message: checkText(documents) }))
+      } catch (error) {
+        response.writeHead(502, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' })
+        response.end(JSON.stringify({ ok: false, error: error instanceof Error ? error.message : String(error) }))
+      }
+    },
+  }), 'dsh-settings-remote-sync: check route')
 
   ctx.commands.register({
     name: 'dsh-sync',

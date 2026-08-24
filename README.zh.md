@@ -25,7 +25,7 @@ dsh plugin --profile web add github:Blithetem/dsh-settings-remote-sync
 
 插件不会内置任何远端地址，安装后需要手动填写两个地址。由于凭据文件包含密钥，优先使用 HTTPS；只有在可信内网中才建议开启 HTTP。
 
-可在对话中执行 `/dsh-sync-check` 检测两个地址、HTTP 状态、响应类型和 YAML 内容；该命令只检测，不会写入本地设置或凭据。执行 `/dsh-sync` 才会实际应用配置。错误信息会标明具体文件和失败阶段。
+在设置卡片中点击“检测”，或执行 `/dsh-sync-check`，可检测两个地址、HTTP 状态、响应类型和 YAML 内容；检测不会写入本地设置或凭据。执行 `/dsh-sync` 才会实际应用配置。错误信息会标明具体文件和失败阶段。
 
 ## 插件结构
 
