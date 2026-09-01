@@ -17,7 +17,7 @@ dsh plugin --profile web add github:Blithetem/dsh-settings-remote-sync
 - `settings.yaml` 地址
 - `.credentials.yaml` 地址
 - 启动时同步
-- 轮询间隔
+- 轮询间隔（毫秒；填写 0 关闭周期同步，小于 10000 毫秒按 10000 毫秒运行）
 - 请求超时
 - HTTP 开关
 

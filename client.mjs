@@ -194,7 +194,7 @@ window.__ModuleLoader__.load({
           input('settingsUrl', 'Settings 地址', '远端 settings.yaml 地址，优先使用 HTTPS。'),
           input('credentialsUrl', 'Credentials 地址', '远端 .credentials.yaml 地址，优先使用 HTTPS。'),
           input('syncOnStartup', '启动时同步', '填写 true 或 false。'),
-          input('intervalMs', '轮询间隔（毫秒）', '填写 0 关闭周期同步。', 'number'),
+          input('intervalMs', '轮询间隔（毫秒）', '填写 0 关闭周期同步；小于 10000 毫秒按 10000 毫秒运行。', 'number'),
           input('timeoutMs', '请求超时（毫秒）', '网络请求超过此时间会报错。', 'number'),
           input('allowInsecureHttp', '允许 HTTP', '仅可信内网开启；凭据会无 TLS 传输。'),
           state.writable === false && React.createElement('p', { className: 'dshrs_hint' }, '当前设置文件为只读。'),

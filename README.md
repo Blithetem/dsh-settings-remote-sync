@@ -17,7 +17,7 @@ Open **Settings → Plugins → 远端 DSH 配置** to enter:
 - `settings.yaml` URL
 - `.credentials.yaml` URL
 - startup synchronization
-- polling interval
+- polling interval (milliseconds; 0 disables periodic sync, values below 10000 run at 10000)
 - request timeout
 - HTTP opt-in
 

@@ -4,6 +4,7 @@ import z from '@deepseek-ai/schemastery'
 import { parseDocument } from 'yaml'
 
 const MAX_BYTES = 4 * 1024 * 1024
+const MIN_INTERVAL_MS = 10_000
 const SETTINGS_NAMESPACE = 'settings-remote-sync'
 
 export const Config = z.object({
@@ -175,8 +176,9 @@ export function apply(ctx, config) {
   }
   const resetTimer = () => {
     if (timer !== undefined) clearInterval(timer)
-    timer = activeConfig.intervalMs > 0 && configured(activeConfig)
-      ? setInterval(() => { void synchronize(lifecycle.signal).catch(failure) }, activeConfig.intervalMs)
+    const intervalMs = activeConfig.intervalMs > 0 ? Math.max(activeConfig.intervalMs, MIN_INTERVAL_MS) : 0
+    timer = intervalMs > 0 && configured(activeConfig)
+      ? setInterval(() => { void synchronize(lifecycle.signal).catch(failure) }, intervalMs)
       : undefined
   }
 
